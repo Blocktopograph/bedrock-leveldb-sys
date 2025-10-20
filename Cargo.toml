@@ -2,9 +2,11 @@
 name = "bedrock-leveldb-sys"
 version = "1.0.0"
 links = "leveldb"
+authors = [ "NguyenDuck" ]
 description = "Rust FFI bindings for Mojang's fork of LevelDB (Bedrock Edition)"
 edition = "2024"
-license = "AGPL-3.0"
+license = "AGPL-3.0-only"
+keywords = [ "minecraft", "bedrock", "leveldb", "blocktopograph" ]
 
 
 [dependencies]
