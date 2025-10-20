@@ -4,7 +4,7 @@ version = "1.0.0"
 links = "leveldb"
 description = "Rust FFI bindings for Mojang's fork of LevelDB (Bedrock Edition)"
 edition = "2024"
-license = "MIT"
+license = "AGPL-3.0"
 
 
 [dependencies]
