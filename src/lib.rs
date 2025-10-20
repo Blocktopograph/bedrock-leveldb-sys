@@ -81,6 +81,10 @@ pub enum Compression {
     No = 0,
     /// Snappy compression - good balance of speed and compression ratio
     Snappy = 1,
+    /// Zstd compression - higher compression ratio, slower
+    Zstd = 2,
+    /// Zlib raw compression - compatible with zlib, slower
+    ZlibRaw = 4,
 }
 
 unsafe extern "C" {
