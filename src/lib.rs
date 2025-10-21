@@ -784,6 +784,30 @@ unsafe extern "C" {
     /// - `o` must be a valid options pointer
     pub fn leveldb_options_set_block_restart_interval(o: *mut leveldb_options_t, interval: c_int);
 
+    /// Set the maximum file size for SST files
+    ///
+    /// # Arguments
+    ///
+    /// * `o` - Options handle
+    /// * `size` - Maximum file size in bytes
+    ///
+    /// # Safety
+    ///
+    /// - `o` must be a valid options pointer
+    pub fn leveldb_options_set_max_file_size(o: *mut leveldb_options_t, size: size_t);
+
+    /// Enable or disable seek-based auto compaction
+    ///
+    /// # Arguments
+    ///
+    /// * `o` - Options handle
+    /// * `val` - Non-zero to disable seek auto compaction, zero to enable
+    ///
+    /// # Safety
+    ///
+    /// - `o` must be a valid options pointer
+    pub fn leveldb_options_set_disable_seek_autocompaction(o: *mut leveldb_options_t, val: c_uchar);
+
     /// Set the compression algorithm
     ///
     /// # Arguments
