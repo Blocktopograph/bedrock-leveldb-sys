@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, process::Command};
 
 fn main() {
     let base = Path::new("leveldb");
@@ -20,25 +20,23 @@ fn main() {
         for entry in glob::glob(pattern.to_str().unwrap()).unwrap() {
             let path = entry.unwrap();
             let file_name = path.file_name().unwrap().to_string_lossy();
-            // Skip certain files not needed for Bedrock
+
+            // Skip certain files not needed for the build
             // Skip test files
-            if file_name.contains("_test")
-                || file_name.contains("testutil")
-                || file_name.contains("bench")
-            {
+            if file_name.contains("test") || file_name.contains("bench") {
                 continue;
             }
 
             if cfg!(target_os = "windows") {
                 // Skip files that are not compatible with Windows
-                if file_name == "env_posix.cc" || file_name == "file_posix.cc" {
+                if file_name == "env_posix.cc" {
                     continue;
                 }
             }
 
-            if !cfg!(target_os = "windows") {
+            if cfg!(target_os = "linux") {
                 // Skip Windows-specific files on non-Windows platforms
-                if file_name == "env_win.cc" || file_name == "file_win.cc" {
+                if file_name == "env_windows.cc" {
                     continue;
                 }
             }
@@ -59,15 +57,49 @@ fn main() {
 
     // Build as a static library
     build.compile("leveldb");
+    println!("cargo:rerun-if-changed=leveldb/");
 
     // Link libraries needed by LevelDB
-    println!("cargo:rustc-link-lib=static=zlib");
-    println!("cargo:rustc-link-lib=snappy");
-    println!(
-        "cargo:rustc-link-search=native={}",
-        "F:\\vcpkg\\installed\\x64-windows\\lib\\"
-    );
-    println!("cargo:rerun-if-changed=leveldb/");
+    if cfg!(target_os = "windows") {
+        let vcpkg_path = find_vcpkg_root().expect("Failed to find vcpkg installation.");
+        let vcpkg_root = Path::new(&vcpkg_path);
+
+        if cfg!(target_arch = "x86") {
+            panic!("32-bit architecture is not supported. Please use x64 architecture.");
+        }
+
+        let mut triplet = "";
+
+        if cfg!(target_arch = "x86_64") {
+            triplet = "x64-windows";
+        } else if cfg!(target_arch = "aarch64") {
+            triplet = "arm64-windows";
+        } else {
+            let _ = triplet;
+            panic!("Unsupported architecture for Windows platform.");
+        }
+
+        println!(
+            "cargo:rustc-link-search=native={}",
+            vcpkg_root
+                .join("installed")
+                .join(triplet)
+                .join("lib")
+                .display()
+        );
+
+        println!("cargo:rustc-link-lib=static=zlib");
+        println!("cargo:rustc-link-lib=snappy");
+    } else if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-search=native={}", "/usr/lib");
+        println!("cargo:rustc-link-lib=static=z");
+        println!("cargo:rustc-link-lib=pthread");
+        println!("cargo:rustc-link-lib=rt");
+        println!("cargo:rustc-link-lib=snappy");
+    } else if cfg!(target_os = "macos") {
+        println!("cargo:rustc-link-lib=static=z");
+        println!("cargo:rustc-link-lib=snappy");
+    }
 
     // Optional: print current submodule commit hash for debugging
     if let Ok(output) = std::process::Command::new("git")
@@ -78,4 +110,20 @@ fn main() {
             println!("cargo:warning=Building LevelDB commit: {}", hash.trim());
         }
     }
+}
+
+fn find_vcpkg_root() -> Option<String> {
+    let output = Command::new("powershell")
+        .args(&["/C", "(Get-Command vcpkg).Source"])
+        .output()
+        .ok()?;
+
+    let vcpkg_path = String::from_utf8(output.stdout).ok()?;
+    let vcpkg_root = Path::new(&vcpkg_path)
+        .parent()
+        .expect("Failed to determine vcpkg root directory")
+        .as_os_str()
+        .to_string_lossy();
+
+    Some(vcpkg_root.to_string())
 }

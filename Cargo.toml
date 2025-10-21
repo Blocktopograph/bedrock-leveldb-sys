@@ -1,6 +1,6 @@
 [package]
 name = "bedrock-leveldb-sys"
-version = "1.0.0"
+version = "1.0.1"
 links = "leveldb"
 authors = [ "NguyenDuck" ]
 description = "Rust FFI bindings for Mojang's fork of LevelDB (Bedrock Edition)"
